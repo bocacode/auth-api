@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken')
 const { connectDb } = require('./dbConnect')
 
 exports.createUser = (req, res) => {
@@ -25,11 +26,11 @@ exports.createUser = (req, res) => {
         isAdmin: false,
         userRole: 5,
       }
-      // TODO: create a JWT and send back the token
+      const token = jwt.sign(user, 'doNotShareYourSecret') // protect this secret
       res.status(201).send({
         success: true,
         message: 'Account created',
-        token: user, // add this to token later
+        token
        })
     })
     .catch(err => res.status(500).send({ 
@@ -69,10 +70,11 @@ exports.loginUser = (req, res) => {
           user.password = undefined
           return user
         })
+        const token = jwt.sign(users[0], 'doNotShareYourSecret')
         res.send({
           success: true,
           message: 'Login successful',
-          token: users[0]
+          token
         })
       })
       .catch(err => res.status(500).send({ 
@@ -82,7 +84,23 @@ exports.loginUser = (req, res) => {
       }))
 }
 
-exports.getUsers = (req, res) => { // TODO: Protect this route with JWT
+exports.getUsers = (req, res) => {
+  // first make sure the user sent authorization token
+  if(!req.headers.authorization) {
+    return res.status(403).send({
+      success: false,
+      message: 'No authorization token found'
+    })
+  }
+  // TODO: Protect this route with JWT
+  const decode = jwt.verify(req.headers.authorization, 'doNotShareYourSecret')
+  console.log('NEW REQUEST BY:', decode.email)
+  if(decode.userRole > 5) {
+    return res.status(401).send({
+      success: false,
+      message: 'Not authorized'
+    })
+  }
   const db = connectDb()
   db.collection('users').get()
     .then(snapshot => {
