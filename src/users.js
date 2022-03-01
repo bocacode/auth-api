@@ -48,7 +48,27 @@ exports.loginUser = (req, res) => {
     .where('email','==', req.body.email.toLowerCase())
     .where('password','==', req.body.password)
     .get()
-      .then()
+      .then(snapshot => {
+        if(snapshot.empty) { // bad login
+          res.status(401).send({
+            success: false,
+            message: 'Invalid email or password',
+          })
+          return
+        }
+        // good login
+        const users = snapshot.docs.map(doc => {
+          let user = doc.data()
+          user.id = doc.id
+          user.password = undefined
+          return user
+        })
+        res.send({
+          success: true,
+          message: 'Login successful',
+          token: users[0]
+        })
+      })
       .catch(err => res.status(500).send({ 
         success: false,
         message: err.message,
