@@ -4,7 +4,10 @@ exports.createUser = (req, res) => {
   // first, let's do some validation... (email, password)
   if(!req.body || !req.body.email || !req.body.password) {
     // invalid request
-    res.status(400).send('Invalid request')
+    res.status(400).send({
+      success: false,
+      message: 'Invalid request',
+    })
     return
   }
   const newUser = {
@@ -40,7 +43,10 @@ exports.loginUser = (req, res) => {
   // first, let's do some validation... (email, password)
   if(!req.body || !req.body.email || !req.body.password) {
     // invalid request
-    res.status(400).send('Invalid request')
+    res.status(400).send({
+      success: false,
+      message: 'Invalid request',
+    })
     return
   }
   const db = connectDb()
